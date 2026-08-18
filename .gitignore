@@ -1,0 +1,29 @@
+node_modules/
+*.log
+_freebuff/
+.DS_Store
+Thumbs.db
+
+# Temp / test run artifacts
+_*.js
+_*.out
+_*.html
+*.log
+
+# Project-specific exclusions
+Enigma*/
+*.bat
+_app_b64.txt
+takip-oy-botu.html
+index.html.fix
+wuaze-tools-analysis.html
+VERCEL_DEPLOY.md
+README.md
+a11y-audit-notes.md
+extract.js
+fix_gj.js
+temp_extract.js
+temp_extract2.js
+/vercel.json
+.preview-server.js
+.agents/

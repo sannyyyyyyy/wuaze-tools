@@ -1,0 +1,7 @@
+# Yalnızca gerekenleri build context'ine al — kök klasördeki ilgisiz dosyalar hariç
+*
+!index.html
+!proxy.php
+!deploy/
+!deploy/api/
+!deploy/api/mailtm.js
