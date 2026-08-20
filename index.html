@@ -635,7 +635,7 @@ var BS = {};
 var SVC_ORDER = ['mailtm']; /* yedek servisler (maildrop/guerrilla) zincirden ÇIKARILDI: forum domainlerini reddediyor */
 var AB = 'https://forumapi.sinavla.com';
 var PROXY = 'proxy.php'; /* mail.tm vekili — index.html ile aynı klasöre yüklenmeli */
-var PROXIES = ['proxy.php', 'api/mailtm']; /* vekil adayları: InfinityFree'de proxy.php, Vercel'de /api/mailtm (serverless) */
+var PROXIES = ['api/mailtm', 'proxy.php']; /* vekil adayları: Vercel'de önce /api/mailtm, sonra fallback proxy.php (InfinityFree) */
 var MAIL_TIMEOUT = 75000; /* kod teslimatı bazen yavaş (guerrilla vb.) — 75sn'ye çıkarıldı; bekleme aralığı uyarlamalı */
 var REG_STAGGER = 0; /* gecikmeler kaldırıldı — görevler arasında bekleme yok */
 
