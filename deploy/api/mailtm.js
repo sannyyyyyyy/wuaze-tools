@@ -1,19 +1,4 @@
-/* ============================================================
-   Mail.tm Vekili — Vercel Serverless (proxy.php'nin Vercel karşılığı)
-   ------------------------------------------------------------
-   Tarayıcı CORS engeli nedeniyle api.mail.tm'ye doğrudan erişilemez.
-   Bu fonksiyon, /api/mailtm?p=/domains şeklinde çağrılır ve
-   SADECE api.mail.tm'ye vekillik eder.
-
-   Kullanım: /api/mailtm?p=/domains
-             /api/mailtm?p=/accounts        (POST)
-             /api/mailtm?p=/token           (POST)
-             /api/mailtm?p=/messages        (GET, Authorization)
-             /api/mailtm?p=/messages/{id}   (GET, Authorization)
-   ============================================================ */
-
 module.exports = async (req, res) => {
-  /* CORS preflight */
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'content-type, authorization, accept');
@@ -31,7 +16,6 @@ module.exports = async (req, res) => {
 
   const upstream = 'https://api.mail.tm' + p;
 
-  /* üst servise iletilecek başlıklar (host/content-length/connection çıkarılır) */
   const headers = {};
   ['content-type', 'accept', 'authorization'].forEach((h) => {
     const v = req.headers && req.headers[h];
@@ -44,21 +28,20 @@ module.exports = async (req, res) => {
     if (body && typeof body !== 'string') body = JSON.stringify(body);
   }
 
-  let upstreamResp;
   try {
-    upstreamResp = await fetch(upstream, {
+    const upstreamResp = await fetch(upstream, {
       method: req.method,
       headers,
       body: body || undefined,
     });
-  } catch (e) {
-    res.status(502).json({ error: 'upstream: ' + (e && e.message) });
-    return;
-  }
 
-  const text = await upstreamResp.text().catch(() => '');
-  const ct = upstreamResp.headers.get('content-type') || 'application/json; charset=utf-8';
-  res.status(upstreamResp.status);
-  res.setHeader('Content-Type', ct);
-  res.send(text);
+    const text = await upstreamResp.text().catch(() => '');
+    const ct = upstreamResp.headers.get('content-type') || 'application/json; charset=utf-8';
+    res.status(upstreamResp.status);
+    res.setHeader('Content-Type', ct);
+    res.send(text);
+  } catch (e) {
+    console.error('mailtm proxy error:', e);
+    res.status(502).json({ error: 'upstream: ' + (e && e.message ? e.message : String(e)) });
+  }
 };
