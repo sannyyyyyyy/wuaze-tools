@@ -18,18 +18,11 @@ const json = (obj, status) =>
     headers: { 'content-type': 'application/json; charset=utf-8' },
   });
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
-};
-
 const handler = async (req) => {
   const url = new URL(req.url);
 
-  // CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204 });
   }
 
   const p = url.searchParams.get('p') || '';
@@ -54,25 +47,14 @@ const handler = async (req) => {
   try {
     resp = await fetch(upstream, { method: req.method, headers, body });
   } catch (e) {
-    return json({ error: 'upstream: ' + (e && e.message) }, 502, corsHeaders);
+    return json({ error: 'upstream: ' + (e && e.message) }, 502);
   }
 
   const text = await resp.text().catch(() => '');
-
-  // Response headers with CORS
-  const responseHeaders = {
-    'content-type': resp.headers.get('content-type') || 'application/json; charset=utf-8',
-    ...corsHeaders,
-  };
-
   return new Response(text, {
     status: resp.status,
-    headers: responseHeaders,
+    headers: { 'content-type': resp.headers.get('content-type') || 'application/json; charset=utf-8' },
   });
 };
 
-// Vercel Serverless Function export format
-export default handler;
-
-// Eski format desteği (gerekiyorsa)
 module.exports = handler;
