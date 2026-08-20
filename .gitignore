@@ -27,3 +27,4 @@ temp_extract2.js
 /vercel.json
 .preview-server.js
 .agents/
+.vercel
