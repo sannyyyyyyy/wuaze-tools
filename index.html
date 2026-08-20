@@ -632,12 +632,12 @@
 /* ===== GENEL ===== */
 var ACCOUNTS_KEY = 'wuaze_accounts';
 var BS = {};
-var SVC_ORDER = ['guerrilla', 'mailtm']; /* guerrillamail primary (mail.tm Vercel IP engeli), yedek mailtm */
+var SVC_ORDER = ['guerrilla']; /* Vercel'de çalışan tek servis: guerrillamail. mail.tm IP engelli. */
 
 /* 1secmail (thirteenthand) service definition to be added to MS object */
 var AB = 'https://forumapi.sinavla.com';
 var PROXY = 'proxy.php'; /* mail.tm vekili — index.html ile aynı klasöre yüklenmeli */
-var PROXIES = ['api/mailtm', 'proxy.php']; /* vekil adayları: Vercel'de önce /api/mailtm, sonra fallback proxy.php (InfinityFree) */
+var PROXIES = ['api/mailtm']; /* Vercel: sadece /api/mailtm serverless function (PHP çalışmaz, proxy.php artık yok) */
 var MAIL_TIMEOUT = 75000; /* kod teslimatı bazen yavaş (guerrilla vb.) — 75sn'ye çıkarıldı; bekleme aralığı uyarlamalı */
 var REG_STAGGER = 0; /* gecikmeler kaldırıldı — görevler arasında bekleme yok */
 
@@ -1073,11 +1073,14 @@ var MS = {
             }).then(function(d) { _mtDomains = d; return d; });
             return domP.then(function(d) {
                 var arr = (d['hydra:member'] || []).filter(function(x) { return x.isActive !== false; });
-                /* Her zaman emalupe.com kullan — forum bu domaini kabul ediyor (IP testiyle doğrulandı).
-                   Eski kod: emalupe.com listede yoksa rastgele domain'e düşüyordu → forum reddediyordu
-                   ("Bu e-posta sağlayıcısı desteklenmiyor"). mail.tm domain listesi döndüğünde
-                   emalupe.com her zaman mevcut olmayabilir, ama hesap oluşturma yine de çalışır. */
-                var domain = 'emalupe.com';
+                var domain;
+                if (arr.length === 0) {
+                    // fallback to emalupe.com if no active domains
+                    domain = 'emalupe.com';
+                } else {
+                    // use the first active domain from the list
+                    domain = arr[0].domain;
+                }
                 var local = 'wz' + Date.now().toString(36) + Math.floor(Math.random() * 46656).toString(36);
                 var email = local + '@' + domain;
                 var password = 'Wz!' + Math.random().toString(36).slice(2, 14) + 'A1';
