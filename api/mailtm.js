@@ -1,31 +1,38 @@
-module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'content-type, authorization, accept');
+export const config = {
+  runtime: 'edge',
+};
+
+export default async (req) => {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'content-type, authorization, accept',
+  };
 
   if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return;
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  const p = (req.query && req.query.p) || '';
+  const url = new URL(req.url);
+  const p = url.searchParams.get('p') || '';
   if (!p || p[0] !== '/') {
-    res.status(400).json({ error: 'p parametresi gerekli (örn. ?p=/domains)' });
-    return;
+    return new Response(JSON.stringify({ error: 'p parametresi gerekli (örn. ?p=/domains)' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'content-type': 'application/json' },
+    });
   }
 
   const upstream = 'https://api.mail.tm' + p;
 
   const headers = {};
   ['content-type', 'accept', 'authorization'].forEach((h) => {
-    const v = req.headers && req.headers[h];
+    const v = req.headers.get(h);
     if (v) headers[h] = v;
   });
 
   let body = null;
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    body = req.body || null;
-    if (body && typeof body !== 'string') body = JSON.stringify(body);
+    body = await req.text().catch(() => null);
   }
 
   try {
@@ -36,12 +43,19 @@ module.exports = async (req, res) => {
     });
 
     const text = await upstreamResp.text().catch(() => '');
-    const ct = upstreamResp.headers.get('content-type') || 'application/json; charset=utf-8';
-    res.status(upstreamResp.status);
-    res.setHeader('Content-Type', ct);
-    res.send(text);
+    const responseHeaders = new Headers(corsHeaders);
+    const contentType = upstreamResp.headers.get('content-type') || 'application/json; charset=utf-8';
+    responseHeaders.set('Content-Type', contentType);
+
+    return new Response(text, {
+      status: upstreamResp.status,
+      headers: responseHeaders,
+    });
   } catch (e) {
     console.error('mailtm proxy error:', e);
-    res.status(502).json({ error: 'upstream: ' + (e && e.message ? e.message : String(e)) });
+    return new Response(JSON.stringify({ error: 'upstream: ' + (e && e.message ? e.message : String(e)) }), {
+      status: 502,
+      headers: { ...corsHeaders, 'content-type': 'application/json' },
+    });
   }
 };
