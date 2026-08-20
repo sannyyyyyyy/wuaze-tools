@@ -36,13 +36,17 @@ export default async (req) => {
   }
 
   try {
+    console.log('Fetching upstream:', upstream);
     const upstreamResp = await fetch(upstream, {
       method: req.method,
       headers,
       body: body || undefined,
     });
+    console.log('Upstream status:', upstreamResp.status);
 
     const text = await upstreamResp.text().catch(() => '');
+    console.log('Upstream text length:', text.length);
+
     const responseHeaders = new Headers(corsHeaders);
     const contentType = upstreamResp.headers.get('content-type') || 'application/json; charset=utf-8';
     responseHeaders.set('Content-Type', contentType);
@@ -52,7 +56,7 @@ export default async (req) => {
       headers: responseHeaders,
     });
   } catch (e) {
-    console.error('mailtm proxy error:', e);
+    console.error('mailtm proxy error:', e, 'stack:', e.stack);
     return new Response(JSON.stringify({ error: 'upstream: ' + (e && e.message ? e.message : String(e)) }), {
       status: 502,
       headers: { ...corsHeaders, 'content-type': 'application/json' },
