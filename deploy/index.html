@@ -632,7 +632,9 @@
 /* ===== GENEL ===== */
 var ACCOUNTS_KEY = 'wuaze_accounts';
 var BS = {};
-var SVC_ORDER = ['guerrilla', 'mailtm']; /* guerrillamail primary (mail.tm Vercel IP engeli), yedek mailtm */
+var SVC_ORDER = ['thirteenthand', 'guerrilla', 'mailtm']; /* 1secmail → guerrillamail → mail.tm */
+
+/* 1secmail (thirteenthand) service definition to be added to MS object */
 var AB = 'https://forumapi.sinavla.com';
 var PROXY = 'proxy.php'; /* mail.tm vekili — index.html ile aynı klasöre yüklenmeli */
 var PROXIES = ['api/mailtm', 'proxy.php']; /* vekil adayları: Vercel'de önce /api/mailtm, sonra fallback proxy.php (InfinityFree) */
@@ -1127,6 +1129,35 @@ var MS = {
         msgs: function(s) { return fetch('https://api.guerrillamail.com/ajax.php?f=check_email&sid_token=' + s.sid + '&seq=0').then(function(r) { return r.ok ? r.json() : { list: [] }; }).then(function(j) { return (j.list || []).map(function(m) { return { id: m.mail_id || m.id, subject: m.mail_subject || '' }; }); }); },
         read: function(s, id) { return fetch('https://api.guerrillamail.com/ajax.php?f=fetch_email&sid_token=' + s.sid + '&email_id=' + id).then(function(r) { if (!r.ok) throw new Error('Okunamadı'); return r.json(); }); },
         body: function(m) { return m.mail_body || m.text_body || ''; }
+    },
+    /* 1secmail — doğrudan fetch çalışıyor (CORS'lı) -> Vercel'de güvenilir fallback. domain: zeer.pm, wwjmp.com, etc. */
+    thirteenthand: {
+        name: '1secmail (zeer.pm)',
+        health: 1.0,
+        create: function() {
+            return fetch('https://api.1secmail.com/v1/?action=genRandomMailbox&count=1').then(function(r) {
+                if (!r.ok) throw new Error('Erişilemez');
+                return r.json();
+            }).then(function(d) {
+                var parts = d[0].split('@');
+                return { email: d[0], login: parts[0], domain: parts[1] };
+            });
+        },
+        msgs: function(s) {
+            return fetch('https://api.1secmail.com/v1/?action=getMessages&login=' + encodeURIComponent(s.login) + '&domain=' + encodeURIComponent(s.domain)).then(function(r) {
+                if (!r.ok) throw new Error('Erişilemez');
+                return r.json();
+            }).then(function(j) {
+                return (j || []).map(function(m) { return { id: m.id, subject: m.subject || '' }; });
+            });
+        },
+        read: function(s, id) {
+            return fetch('https://api.1secmail.com/v1/?action=readMessage&login=' + encodeURIComponent(s.login) + '&domain=' + encodeURIComponent(s.domain) + '&id=' + encodeURIComponent(id)).then(function(r) {
+                if (!r.ok) throw new Error('Okunamadı');
+                return r.json();
+            }).then(function(m) { return { id: id, text: m.text || '', html: '' }; });
+        },
+        body: function(m) { return m.text || ''; }
     }
 };
 
