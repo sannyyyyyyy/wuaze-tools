@@ -1,15 +1,12 @@
-const json = (obj, status) =>
-  new Response(JSON.stringify(obj), {
-    status: status || 200,
-    headers: { 'content-type': 'application/json; charset=utf-8' },
-  });
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type');
 
-const handler = async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204 });
+    res.status(204).end();
+    return;
   }
 
-  return json({ status: 'ok', timestamp: new Date().toISOString() }, 200);
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 };
-
-module.exports = handler;

@@ -12,49 +12,53 @@
              /api/mailtm?p=/messages/{id}   (GET, Authorization)
    ============================================================ */
 
-const json = (obj, status) =>
-  new Response(JSON.stringify(obj), {
-    status: status || 200,
-    headers: { 'content-type': 'application/json; charset=utf-8' },
-  });
-
-const handler = async (req) => {
-  const url = new URL(req.url);
+module.exports = async (req, res) => {
+  /* CORS preflight */
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'content-type, authorization, accept');
 
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204 });
+    res.status(204).end();
+    return;
   }
 
-  const p = url.searchParams.get('p') || '';
-  if (p === '' || p[0] !== '/') {
-    return json({ error: 'p parametresi gerekli (örn. ?p=/domains)' }, 400);
+  const p = (req.query && req.query.p) || '';
+  if (!p || p[0] !== '/') {
+    res.status(400).json({ error: 'p parametresi gerekli (örn. ?p=/domains)' });
+    return;
   }
 
   const upstream = 'https://api.mail.tm' + p;
 
+  /* üst servise iletilecek başlıklar (host/content-length/connection çıkarılır) */
   const headers = {};
   ['content-type', 'accept', 'authorization'].forEach((h) => {
-    const v = req.headers.get(h);
+    const v = req.headers && req.headers[h];
     if (v) headers[h] = v;
   });
 
   let body = null;
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    body = await req.text().catch(() => null);
+    body = req.body || null;
+    if (body && typeof body !== 'string') body = JSON.stringify(body);
   }
 
-  let resp;
+  let upstreamResp;
   try {
-    resp = await fetch(upstream, { method: req.method, headers, body });
+    upstreamResp = await fetch(upstream, {
+      method: req.method,
+      headers,
+      body: body || undefined,
+    });
   } catch (e) {
-    return json({ error: 'upstream: ' + (e && e.message) }, 502);
+    res.status(502).json({ error: 'upstream: ' + (e && e.message) });
+    return;
   }
 
-  const text = await resp.text().catch(() => '');
-  return new Response(text, {
-    status: resp.status,
-    headers: { 'content-type': resp.headers.get('content-type') || 'application/json; charset=utf-8' },
-  });
+  const text = await upstreamResp.text().catch(() => '');
+  const ct = upstreamResp.headers.get('content-type') || 'application/json; charset=utf-8';
+  res.status(upstreamResp.status);
+  res.setHeader('Content-Type', ct);
+  res.send(text);
 };
-
-module.exports = handler;
