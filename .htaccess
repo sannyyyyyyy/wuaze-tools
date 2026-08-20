@@ -1,0 +1,20 @@
+# InfinityFree / LiteSpeed / Apache için rewrite kuralları
+RewriteEngine On
+
+# proxy.php dosyasını doğrudan erişilebilir yap
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^proxy\.php$ proxy.php [L]
+
+# CORS header'ları ekle (eğer mod_headers etkinse)
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, Accept"
+    Header set Access-Control-Max-Age "86400"
+</IfModule>
+
+# PHP dosyalarının doğrudan erişilebilir olmasını sağla
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>

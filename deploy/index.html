@@ -632,12 +632,12 @@
 /* ===== GENEL ===== */
 var ACCOUNTS_KEY = 'wuaze_accounts';
 var BS = {};
-var SVC_ORDER = ['guerrilla']; /* Vercel'de çalışan tek servis: guerrillamail. mail.tm IP engelli. */
+var SVC_ORDER = ['guerrilla', 'mailtm']; /* guerrillamail primary (works everywhere), mail.tm fallback (works on InfinityFree if not IP blocked) */
 
 /* 1secmail (thirteenthand) service definition to be added to MS object */
 var AB = 'https://forumapi.sinavla.com';
 var PROXY = 'proxy.php'; /* mail.tm vekili — index.html ile aynı klasöre yüklenmeli */
-var PROXIES = ['api/mailtm']; /* Vercel: sadece /api/mailtm serverless function (PHP çalışmaz, proxy.php artık yok) */
+var PROXIES = ['api/mailtm', 'proxy.php']; /* Vercel: sadece /api/mailtm serverless function (PHP çalışmaz, proxy.php artık yok) */
 var MAIL_TIMEOUT = 75000; /* kod teslimatı bazen yavaş (guerrilla vb.) — 75sn'ye çıkarıldı; bekleme aralığı uyarlamalı */
 var REG_STAGGER = 0; /* gecikmeler kaldırıldı — görevler arasında bekleme yok */
 
