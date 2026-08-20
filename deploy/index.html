@@ -955,8 +955,8 @@ function authUser(username, password) {
     });
 }
 function getUserDetails(auth) {
-    /* GET olmalı — POST /user/userDetails 404 döndürüyor (canlı ölçüldü) */
-    return apGet('/user/userDetails', auth).then(function(r) {
+    /* /user/userDetails 404 — /user/getPublicProfile/{uid} ile token doğrulama yap */
+    return apGet('/user/getPublicProfile/' + auth.uid, auth).then(function(r) {
         if (!r || r.status === 'error') return null;
         return r.data || r;
     });
