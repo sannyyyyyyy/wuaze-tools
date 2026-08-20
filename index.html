@@ -632,7 +632,7 @@
 /* ===== GENEL ===== */
 var ACCOUNTS_KEY = 'wuaze_accounts';
 var BS = {};
-var SVC_ORDER = ['thirteenthand', 'guerrilla', 'mailtm']; /* 1secmail → guerrillamail → mail.tm */
+var SVC_ORDER = ['guerrilla', 'mailtm']; /* guerrillamail primary (mail.tm Vercel IP engeli), yedek mailtm */
 
 /* 1secmail (thirteenthand) service definition to be added to MS object */
 var AB = 'https://forumapi.sinavla.com';
@@ -1028,7 +1028,8 @@ function _mtProxyCall(p, opts) {
         if (i >= list.length) { _mtProxyDown = true; return Promise.reject(new Error('Proxy erişilemez')); }
         var u = list[i++];
         return fetch(u + '?p=' + encodeURIComponent(p), opts).then(function(r) {
-            if (r.status === 404) return next(); /* bu vekil yüklü değil — sıradakini dene */
+            /* 404 veya 405 → bu vekil yüklü değil/çalışmıyor, sıradakini dene */
+            if (r.status === 404 || r.status === 405) return next();
             _mtProxyPath = u;
             return r;
         }, function() { return next(); });
@@ -1041,6 +1042,13 @@ function mtFetch(p, opts) {
         if (r.status === 429 || r.status >= 500) {
             _mtGap = Math.min(6000, _mtGap * 1.5);
             return slp(8000).then(function() { return _mtProxyCall(p, opts); });
+        }
+        /* 405 Method Not Allowed (InfinityFree PHP bazen OPTIONS olmadan POST'u bloklarsa veya proxy hatalıysa)
+           → _mtProxyDown sıfırla, bir kez daha dene (proxy değişimi için) */
+        if (r.status === 405) {
+            _mtProxyPath = null;
+            _mtProxyDown = false;
+            return slp(2000).then(function() { return _mtProxyCall(p, opts); });
         }
         return r;
     });
