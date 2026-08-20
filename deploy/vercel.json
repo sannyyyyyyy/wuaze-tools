@@ -1,21 +1,14 @@
 {
   "version": 2,
   "name": "wuaze-tools",
-  "framework": null,
-  "buildCommand": null,
+  "framework": "null",
   "outputDirectory": ".",
   "functions": {
     "api/mailtm.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
+      "runtime": "nodejs20.x"
     },
     "api/health.js": {
       "runtime": "nodejs20.x"
     }
-  },
-  "rewrites": [
-    { "source": "/api/mailtm", "destination": "/api/mailtm" },
-    { "source": "/api/mailtm/(.*)", "destination": "/api/mailtm" },
-    { "source": "/health", "destination": "/api/health" }
-  ]
+  }
 }
