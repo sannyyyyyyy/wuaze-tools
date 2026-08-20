@@ -1,11 +1,17 @@
 {
   "version": 2,
   "name": "wuaze-tools",
-  "framework": null,
-  "buildCommand": null,
+  "framework": "null",
+  "buildCommand": "",
   "outputDirectory": ".",
+  "functions": {
+    "api/mailtm.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "routes": [
-    { "src": "/api/mailtm", "dest": "/api/mailtm.js" },
+    { "src": "/api/mailtm/(.*)", "dest": "api/mailtm.js" },
+    { "src": "/proxy.php", "dest": "api/mailtm.js" },
     { "src": "/", "dest": "/index.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
