@@ -1,14 +1,4 @@
 {
   "version": 2,
-  "name": "wuaze-tools",
-  "framework": "null",
-  "outputDirectory": ".",
-  "functions": {
-    "api/mailtm.js": {
-      "runtime": "nodejs20.x"
-    },
-    "api/health.js": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  "outputDirectory": "."
 }
